@@ -3137,7 +3137,21 @@ exports.MangaUpdates = MangaUpdates;
 },{"./utils/mu-manga":64,"./utils/mu-search":65,"./utils/mu-session":66,"@paperback/types":59}],64:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assertNotLegacyMangaId = exports.parseMangaInfo = void 0;
+exports.assertNotLegacyMangaId = exports.parseMangaInfo = exports.sanitiseString = void 0;
+const HTML_ENTITIES = {
+    '&nbsp;': ' ',
+    '&cent;': '¢',
+    '&pound;': '£',
+    '&yen;': '¥',
+    '&euro;': '€',
+    '&copy;': '©',
+    '&reg;': '®',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&amp;': '&',
+    '&apos;': '\'',
+};
 const IS_HENTAI_GENRE = {
     Adult: true,
     Hentai: true,
@@ -3181,11 +3195,35 @@ function isHentai(manga) {
     var _a;
     return ((_a = manga.genres) === null || _a === void 0 ? void 0 : _a.some((genre) => IS_HENTAI_GENRE[(genre === null || genre === void 0 ? void 0 : genre.genre) || ''])) || false;
 }
+function sanitiseString(str) {
+    return str
+        .replace(/&[^;]+;/g, (entity) => {
+        if (entity in HTML_ENTITIES) {
+            return HTML_ENTITIES[entity];
+        }
+        const hexMatch = entity.match(/^&#x([\da-fA-F]+);$/);
+        const hexCode = hexMatch != null ? hexMatch[1] : undefined;
+        if (hexCode != null) {
+            return String.fromCharCode(parseInt(hexCode, 16));
+        }
+        const decimalMatch = entity.match(/^&#(\d+);$/);
+        const decimalCode = decimalMatch != null ? decimalMatch[1] : undefined;
+        if (decimalCode != null) {
+            return String.fromCharCode(parseInt(decimalCode, 10));
+        }
+        return entity;
+    })
+        .replace(/<br>/gi, '\n')
+        .replace(/<\/?(i|u|b|em|a|span|div|!--)[^>]*>/gi, '');
+}
+exports.sanitiseString = sanitiseString;
 function parseMangaInfo(series) {
     var _a, _b, _c, _d;
     return {
-        titles: [series.title, ...(series.associated || []).map((associated) => associated === null || associated === void 0 ? void 0 : associated.title)].filter((title) => !!title),
-        desc: series.description || '',
+        titles: [series.title, ...(series.associated || []).map((associated) => associated === null || associated === void 0 ? void 0 : associated.title)]
+            .filter((title) => !!title)
+            .map(sanitiseString),
+        desc: sanitiseString(series.description || ''),
         image: ((_b = (_a = series.image) === null || _a === void 0 ? void 0 : _a.url) === null || _b === void 0 ? void 0 : _b.original) || '',
         author: ((_c = series.authors) === null || _c === void 0 ? void 0 : _c.filter((author) => (author === null || author === void 0 ? void 0 : author.type) === 'Author' && author.name).map((author) => author.name).join(', ')) || 'Unknown',
         artist: ((_d = series.authors) === null || _d === void 0 ? void 0 : _d.filter((author) => (author === null || author === void 0 ? void 0 : author.type) === 'Artist' && author.name).map((author) => author.name).join(', ')) || 'Unknown',
@@ -3210,6 +3248,7 @@ exports.assertNotLegacyMangaId = assertNotLegacyMangaId;
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseSearchResults = void 0;
+const mu_manga_1 = require("./mu-manga");
 function parseSearchResults(results) {
     return results.map((result) => {
         var _a, _b, _c, _d, _e;
@@ -3220,12 +3259,17 @@ function parseSearchResults(results) {
             console.log(`[parseSearchResults] ignoring invalid search result: ${JSON.stringify(result)}`);
             return null;
         }
-        return { mangaId: String(id), title, image };
-    }).filter((info) => info !== null);
+        return {
+            mangaId: String(id),
+            title: (0, mu_manga_1.sanitiseString)(title),
+            image,
+        };
+    })
+        .filter((info) => info !== null);
 }
 exports.parseSearchResults = parseSearchResults;
 
-},{}],66:[function(require,module,exports){
+},{"./mu-manga":64}],66:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
