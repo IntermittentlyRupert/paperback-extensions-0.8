@@ -2491,7 +2491,7 @@ exports.MangaUpdatesInfo = {
     author: 'IntermittentlyRupert',
     contentRating: types_1.ContentRating.EVERYONE,
     icon: 'icon.png',
-    version: '3.0.1',
+    version: '3.0.0',
     description: 'MangaUpdates Tracker',
     websiteBaseURL: 'https://www.mangaupdates.com',
     intents: types_1.SourceIntents.MANGA_TRACKING | types_1.SourceIntents.SETTINGS_UI,
@@ -3218,15 +3218,16 @@ function sanitiseString(str) {
 }
 exports.sanitiseString = sanitiseString;
 function parseMangaInfo(series) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
+    console.log(`***** DESC SANITISATION:\n\n***** IN: ${series.description}\n\n***** OUT: ${sanitiseString((_a = series.description) !== null && _a !== void 0 ? _a : "")}`);
     return {
         titles: [series.title, ...(series.associated || []).map((associated) => associated === null || associated === void 0 ? void 0 : associated.title)]
             .filter((title) => !!title)
             .map(sanitiseString),
         desc: sanitiseString(series.description || ''),
-        image: ((_b = (_a = series.image) === null || _a === void 0 ? void 0 : _a.url) === null || _b === void 0 ? void 0 : _b.original) || '',
-        author: ((_c = series.authors) === null || _c === void 0 ? void 0 : _c.filter((author) => (author === null || author === void 0 ? void 0 : author.type) === 'Author' && author.name).map((author) => author.name).join(', ')) || 'Unknown',
-        artist: ((_d = series.authors) === null || _d === void 0 ? void 0 : _d.filter((author) => (author === null || author === void 0 ? void 0 : author.type) === 'Artist' && author.name).map((author) => author.name).join(', ')) || 'Unknown',
+        image: ((_c = (_b = series.image) === null || _b === void 0 ? void 0 : _b.url) === null || _c === void 0 ? void 0 : _c.original) || '',
+        author: ((_d = series.authors) === null || _d === void 0 ? void 0 : _d.filter((author) => (author === null || author === void 0 ? void 0 : author.type) === 'Author' && author.name).map((author) => author.name).join(', ')) || 'Unknown',
+        artist: ((_e = series.authors) === null || _e === void 0 ? void 0 : _e.filter((author) => (author === null || author === void 0 ? void 0 : author.type) === 'Artist' && author.name).map((author) => author.name).join(', ')) || 'Unknown',
         // The type for `status` is lies - it actually expects the string name of the enum value
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         status: parseStatus(series.status || ''),
